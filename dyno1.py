@@ -16,6 +16,7 @@ model_url = "https://github.com/ZarHlyanAung/dyno-demos/raw/main/dyno1.h5"
 # Path to store the downloaded model
 model_path = "dyno1.h5"
 
+
 # Function to download the model
 def download_model(url, save_path):
     if not os.path.exists(save_path):
@@ -27,7 +28,10 @@ def download_model(url, save_path):
 # Download and load the model
 model_path = download_model(model_url, model_path)
 try:
-    model = tf.keras.models.load_model(model_path)
+    custom_objects = {
+        'SparseCategoricalCrossentropy': tf.keras.losses.SparseCategoricalCrossentropy
+    }
+    model = tf.keras.models.load_model(model_path, custom_objects=custom_objects)
     st.success("Model loaded successfully!")
 except Exception as e:
     st.error(f"Error loading the model: {e}")
