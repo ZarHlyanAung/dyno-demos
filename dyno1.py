@@ -10,26 +10,24 @@ st.title("Image Classification App")
 st.write("Upload an image to classify using the pre-trained model.")
 
 # URL of the model file on GitHub (replace with your actual URL)
-model_url = "https://github.com/ZarHlyanAung/dyno-demos/raw/main/dyno1/saved_model.pb"
+model_url = "https://github.com/ZarHlyanAung/dyno-demos/raw/main/dyno1.h5"
 
-# Directory to store the downloaded model
-model_dir = "dyno1"
+
+# Path to store the downloaded model
+model_path = "dyno1.h5"
 
 # Function to download the model
-def download_model(url, save_dir):
-    if not os.path.exists(save_dir):
-        os.makedirs(save_dir)
-    model_path = os.path.join(save_dir, "saved_model.pb")
-    if not os.path.exists(model_path):
+def download_model(url, save_path):
+    if not os.path.exists(save_path):
         response = requests.get(url)
-        with open(model_path, "wb") as f:
+        with open(save_path, "wb") as f:
             f.write(response.content)
-    return save_dir
+    return save_path
 
 # Download and load the model
-model_dir = download_model(model_url, model_dir)
+model_path = download_model(model_url, model_path)
 try:
-    model = tf.keras.models.load_model(model_dir)
+    model = tf.keras.models.load_model(model_path)
     st.success("Model loaded successfully!")
 except Exception as e:
     st.error(f"Error loading the model: {e}")
