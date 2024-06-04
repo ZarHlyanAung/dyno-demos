@@ -2,35 +2,18 @@ import streamlit as st
 import tensorflow as tf
 import numpy as np
 from PIL import Image
-import requests
 import os
 
 # Streamlit app title and description
 st.title("Image Classification App")
 st.write("Upload an image to classify using the pre-trained model.")
 
-# URL of the model file on GitHub (replace with your actual URL)
-model_url = "https://github.com/ZarHlyanAung/dyno-demos/raw/main/dyno1.h5"
-
-
-# Path to store the downloaded model
+# Path to the model file
 model_path = "dyno1.h5"
 
-
-# Function to download the model
-def download_model(url, save_path):
-    if not os.path.exists(save_path):
-        response = requests.get(url)
-        with open(save_path, "wb") as f:
-            f.write(response.content)
-    return save_path
-
-# Download and load the model
-model_path = download_model(model_url, model_path)
+# Load the model
 try:
-    custom_objects = {
-        'SparseCategoricalCrossentropy': tf.keras.losses.SparseCategoricalCrossentropy
-    }
+    custom_objects = {'SparseCategoricalCrossentropy': tf.keras.losses.SparseCategoricalCrossentropy}
     model = tf.keras.models.load_model(model_path, custom_objects=custom_objects)
     st.success("Model loaded successfully!")
 except Exception as e:
