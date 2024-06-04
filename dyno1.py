@@ -2,30 +2,48 @@ import streamlit as st
 import tensorflow as tf
 import numpy as np
 from PIL import Image
-import zipfile
-import io
+import requests
 import os
 
 # Streamlit app title and description
 st.title("Image Classification App")
-st.write("Upload a ZIP file containing the model and an image to classify.")
+st.write("Upload an image to classify using the pre-trained model.")
 
-# File uploader for the zip file containing the model
-uploaded_zip = st.file_uploader("Choose a ZIP file with the model...", type="zip")
+# URL of the model file on GitHub (replace with your actual URL)
+model_url = "https://github.com/ZarHlyanAung/dyno-demos/raw/main/dyno1/saved_model.pb"
+
+# Directory to store the downloaded model
+model_dir = "dyno1"
+
+# Function to download the model
+def download_model(url, save_dir):
+    if not os.path.exists(save_dir):
+        os.makedirs(save_dir)
+    model_path = os.path.join(save_dir, "saved_model.pb")
+    if not os.path.exists(model_path):
+        response = requests.get(url)
+        with open(model_path, "wb") as f:
+            f.write(response.content)
+    return save_dir
+
+# Download and load the model
+model_dir = download_model(model_url, model_dir)
+try:
+    model = tf.keras.models.load_model(model_dir)
+    st.success("Model loaded successfully!")
+except Exception as e:
+    st.error(f"Error loading the model: {e}")
+
+# File uploader for the image
 uploaded_image = st.file_uploader("Choose an image...", type=["jpg", "jpeg", "png"])
 
-# Temporary directory to extract the model
-temp_model_dir = "/tmp/model_dir"
-
-def extract_model(zip_file):
-    with zipfile.ZipFile(zip_file, 'r') as zip_ref:
-        zip_ref.extractall(temp_model_dir)
-
+# Function to preprocess the uploaded image
 def preprocess_image(image):
     image = image.resize((32, 32))  # CIFAR-10 images are 32x32 pixels
     image_array = np.array(image) / 255.0  # Normalize the image
     return np.expand_dims(image_array, axis=0)
 
+# Function to plot the prediction result
 def plot_prediction(image, prediction, class_names):
     import matplotlib.pyplot as plt
     plt.figure(figsize=(5, 5))
@@ -34,16 +52,8 @@ def plot_prediction(image, prediction, class_names):
     plt.axis('off')
     st.pyplot(plt)
 
-if uploaded_zip and uploaded_image:
-    extract_model(uploaded_zip)
-    
-    # Load the model
-    model = tf.keras.models.load_model(temp_model_dir)
-    
-    # CIFAR-10 class names
-    class_names = ['airplane', 'automobile', 'bird', 'cat', 'deer', 'dog', 'frog', 'horse', 'ship', 'truck']
-    
-    # Process the uploaded image
+# Process and classify the uploaded image
+if uploaded_image:
     image = Image.open(uploaded_image)
     st.image(image, caption='Uploaded Image', use_column_width=True)
     st.write("")
@@ -51,6 +61,9 @@ if uploaded_zip and uploaded_image:
     
     processed_image = preprocess_image(image)
     prediction = model.predict(processed_image)
+    
+    # CIFAR-10 class names
+    class_names = ['airplane', 'automobile', 'bird', 'cat', 'deer', 'dog', 'frog', 'horse', 'ship', 'truck']
     
     plot_prediction(image, prediction, class_names)
     st.write(f"Predicted label: {class_names[np.argmax(prediction)]} with {100 * np.max(prediction):.2f}% confidence")
